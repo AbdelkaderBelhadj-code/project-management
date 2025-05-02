@@ -1,0 +1,37 @@
+/* Navbar fixe */
+.Navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #1e293b;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 1000;
+}
+
+/* Sidebar fixe */
+.Sidebar {
+    position: fixed;
+    top: 60px; /* dessous du header */
+    left: 0;
+    width: 240px;
+    height: calc(100vh - 60px);
+    background-color: #0f172a;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Contenu principal avec bon padding */
+.main-content {
+    margin-left: 240px;
+    margin-top: 60px;
+    padding: 20px;
+    min-height: calc(100vh - 60px);
+    overflow-y: auto;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "goober": "^2.1.16",
+    "react-hot-toast": "^2.5.2"
+  }
+}

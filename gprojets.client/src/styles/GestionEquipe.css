@@ -1,0 +1,75 @@
+﻿/* src/styles/GestionEquipe.css */
+
+/* Général */
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.MuiToolbar-root {
+    margin-bottom: 16px;
+}
+
+/* Champ de recherche */
+.MuiTextField-root input {
+    padding-left: 8px;
+}
+
+/* Bouton Ajouter */
+.MuiButton-root {
+    text-transform: none;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+/* Table */
+.MuiTableContainer-root {
+    border-radius: 8px;
+}
+
+.MuiTableHead-root {
+    background-color: #f5f5f5;
+}
+
+.MuiTableCell-head {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Actions (icônes) */
+.MuiIconButton-root {
+    margin: 0 4px;
+}
+
+/* Modal */
+.MuiModal-root .MuiBox-root {
+    background-color: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Inputs du formulaire */
+.MuiTextField-root {
+    margin-bottom: 16px;
+}
+
+/* Buttons du formulaire */
+.MuiBox-root button {
+    text-transform: none;
+    font-weight: 600;
+}
+
+/* Chargement (cercle) */
+.MuiCircularProgress-root {
+    color: #1976d2;
+}
+
+/* Badge de rôle */
+.MuiChip-root {
+    font-weight: 500;
+}
+
+/* Pagination */
+.MuiTablePagination-root {
+    font-size: 0.9rem;
+}

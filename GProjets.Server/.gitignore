@@ -1,0 +1,82 @@
+###############################################
+# .NET Core / ASP.NET Core Git Ignore File
+###############################################
+
+# Build results
+bin/
+obj/
+artifacts/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.dbmdl
+*.bak
+*.backup
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# Visual Studio Code settings
+.history/
+.vscode/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Logs
+*.log
+
+# Test Results
+TestResults/
+TestResult.xml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Reports
+report/
+
+# Entity Framework
+Migrations/
+
+# Local secrets
+secrets.json
+
+# App settings
+appsettings.Development.json
+appsettings.Local.json
+
+# ReSharper
+_ReSharper*/
+*.ReSharper
+*.DotSettings.user
+
+# NCrunch
+*.ncrunch*
+.*crunch*.local.xml
+
+# Backup & temp files
+*.swp
+*.swo
+*.tmp
+*.orig
+
+# Others
+node_modules/
+npm-debug.log
+
+###############################################
+# End of File
+###############################################

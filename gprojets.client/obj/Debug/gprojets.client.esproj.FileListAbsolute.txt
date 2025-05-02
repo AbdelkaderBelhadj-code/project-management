@@ -1,0 +1,2 @@
+C:\Users\DELL\Documents\ProjetStage2025\GProjets\gprojets.client\obj\Debug\gprojets.client.esproj.CoreCompileInputs.cache
+C:\Users\ABDELKADER\Downloads\GProjets\GProjets\gprojets.client\obj\Debug\gprojets.client.esproj.CoreCompileInputs.cache

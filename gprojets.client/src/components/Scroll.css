@@ -1,0 +1,16 @@
+/* src/components/scroll.css */
+/* Scroll invisible mais fonctionnel pour les colonnes */
+
+.column {
+    overflow-y: auto; /* Défilement vertical si nécessaire */
+    -ms-overflow-style: none; /* Cacher la scrollbar sur IE/Edge */
+    scrollbar-width: none; /* Cacher la scrollbar sur Firefox */
+    padding-right: 4px; /* Légère marge interne pour éviter les coupures */
+    max-height: 100%; /* Limite la hauteur au conteneur parent */
+    scroll-behavior: smooth; /* Défilement fluide */
+}
+
+    /* Chrome, Safari, Opera */
+    .column::-webkit-scrollbar {
+        display: none;
+    }

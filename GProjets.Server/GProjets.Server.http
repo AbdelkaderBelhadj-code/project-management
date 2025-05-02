@@ -1,0 +1,8 @@
+@GProjets.Server_HostAddress = https://localhost:7059
+
+GET {{GProjets.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+

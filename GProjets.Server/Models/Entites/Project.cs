@@ -19,8 +19,13 @@ namespace GProjets.Server.Models.Entites
         [ForeignKey("ChefId")]
         public User? Chef { get; set; }
 
+        [Required]
+        public DateTime DateDebut { get; set; }
+
+        [Required]
+        public DateTime DateFin { get; set; }
+
         public ICollection<UserProject>? UserProjects { get; set; }
         public ICollection<Tache>? Taches { get; set; }
-
     }
 }

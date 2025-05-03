@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import dayjs from "dayjs";
 import {
   Paper,
   Typography,
@@ -25,8 +26,18 @@ import {
   Tooltip,
   Avatar,
   Stack,
+  Box,
 } from "@mui/material";
 import { Edit as EditIcon } from "@mui/icons-material";
+
+// Gantt chart colors for status
+const STATUS_COLORS = {
+  "En attente": "#fbc02d",
+  "En cours": "#1976d2",
+  "Terminée": "#388e3c",
+};
+
+const DAY_WIDTH = 32;
 
 function getUserFromToken() {
   const token = localStorage.getItem("token");
@@ -39,11 +50,217 @@ function getUserFromToken() {
         decoded.role ||
         decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"],
       email: decoded.email,
+      firstName: decoded.firstName,
+      lastName: decoded.lastName,
     };
   } catch {
     return null;
   }
 }
+
+const GanttChart = ({ member, tasks }) => {
+  const allTasks = tasks || [];
+  if (allTasks.length === 0) {
+    return (
+      <Typography color="text.secondary" sx={{ mt: 2 }}>
+        Aucun plan de tâches à afficher.
+      </Typography>
+    );
+  }
+
+  const minDate = dayjs(Math.min(...allTasks.map(t => dayjs(t.dateDebut).valueOf())));
+  const maxDate = dayjs(Math.max(...allTasks.map(t => dayjs(t.dateFin).valueOf())));
+
+  const days = [];
+  let d = minDate.startOf("day");
+  while (d.isBefore(maxDate) || d.isSame(maxDate, "day")) {
+    days.push(d);
+    d = d.add(1, "day");
+    if (days.length > 90) break;
+  }
+
+  const rowHeight = 38;
+  const barHeight = 18;
+  const labelColWidth = 160; // px
+  const chartWidth = Math.max(days.length * DAY_WIDTH, 400);
+
+  return (
+    <Box
+      sx={{
+        overflowX: "auto",
+        border: "1px solid #eee",
+        borderRadius: 2,
+        bgcolor: "#f7fafc",
+        p: 2,
+        boxShadow: 1,
+        my: 4,
+      }}
+    >
+      <Typography sx={{ fontWeight: 600, mb: 1, color: "primary.main" }}>
+        Diagramme de Gantt de mes tâches
+      </Typography>
+
+      {/* Status legend */}
+      <Box sx={{ display: "flex", gap: 2, mb: 1 }}>
+        {Object.entries(STATUS_COLORS).map(([s, c]) => (
+          <Box key={s} sx={{ display: "flex", alignItems: "center", mr: 2 }}>
+            <Box sx={{
+              width: 18, height: 12, borderRadius: 1, background: c, mr: 1, boxShadow: 1,
+            }} />
+            <Typography variant="caption" color="text.secondary">{s}</Typography>
+          </Box>
+        ))}
+      </Box>
+
+      {/* Header - dates */}
+      <Box
+        sx={{
+          display: "flex",
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#333",
+          ml: `${labelColWidth}px`,
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          backgroundColor: "#fbfcfd",
+          borderBottom: "1px solid #ddd",
+        }}
+      >
+        {days.map((d, idx) => (
+          <Box
+            key={idx}
+            sx={{
+              width: DAY_WIDTH,
+              flexShrink: 0,
+              textAlign: "center",
+              py: "4px",
+              borderRight: idx !== days.length - 1 ? "1px solid #eaeaea" : "none",
+            }}
+          >
+            {d.format("DD/MM")}
+          </Box>
+        ))}
+      </Box>
+
+      {/* Row: only the current user */}
+      <Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            height: rowHeight,
+            bgcolor: "#fff",
+            position: "relative",
+            ":hover": { bgcolor: "#f1f7fd" },
+            transition: "background 0.2s",
+            borderTop: "1px solid #eee",
+          }}
+        >
+          {/* Member name */}
+          <Box
+            sx={{
+              width: labelColWidth,
+              flexShrink: 0,
+              fontWeight: 500,
+              pl: 1,
+              color: "#333",
+              fontSize: 15,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}
+            title={`${member.firstName} ${member.lastName}`}
+          >
+            {member.firstName} {member.lastName}
+          </Box>
+          {/* Gantt bars */}
+          <Box
+            sx={{
+              position: "relative",
+              width: chartWidth,
+              height: rowHeight,
+              display: "flex",
+              alignItems: "center"
+            }}
+          >
+            {allTasks.map((t, i) => {
+              const start = dayjs(t.dateDebut);
+              const end = dayjs(t.dateFin);
+              const leftDays = start.diff(minDate, "day");
+              const barDays = Math.max(end.diff(start, "day") + 1, 1);
+              const leftPx = leftDays * DAY_WIDTH;
+              const widthPx = barDays * DAY_WIDTH;
+
+              return (
+                <Tooltip
+                  key={t.tacheId}
+                  title={
+                    <Box sx={{ p: 0.5 }}>
+                      <b>{t.title}</b>
+                      <br />
+                      {t.description}
+                      <br />
+                      <span>
+                        <i>
+                          {start.format("DD/MM/YYYY")} → {end.format("DD/MM/YYYY")}
+                        </i>
+                      </span>
+                      <br />
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          color: STATUS_COLORS[t.status] || "#888"
+                        }}
+                      >
+                        {t.status}
+                      </span>
+                    </Box>
+                  }
+                  arrow
+                >
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: (rowHeight - barHeight) / 2,
+                      left: leftPx,
+                      width: widthPx,
+                      height: barHeight,
+                      bgcolor: STATUS_COLORS[t.status] || "#bdbdbd",
+                      borderRadius: "9px",
+                      boxShadow: "0 2px 7px 0 #0001",
+                      color: "#fff",
+                      fontWeight: 500,
+                      fontSize: 13,
+                      px: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      border: "2px solid #fff",
+                      transition: "background 0.2s"
+                    }}
+                  >
+                    <span
+                      style={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        width: "100%",
+                      }}
+                    >
+                      {t.title}
+                    </span>
+                  </Box>
+                </Tooltip>
+              );
+            })}
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
 
 const UserTasks = () => {
   const user = getUserFromToken();
@@ -52,7 +269,6 @@ const UserTasks = () => {
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
 
-  // to store full user details for assignedTo in tasks
   const [assignedUsersMap, setAssignedUsersMap] = useState({});
 
   const [openEdit, setOpenEdit] = useState(false);
@@ -66,14 +282,13 @@ const UserTasks = () => {
   const [projectMembers, setProjectMembers] = useState([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
 
-  // Fetch the current user's assigned tasks
   useEffect(() => {
     if (userId) {
       fetchTasks();
     }
+    // eslint-disable-next-line
   }, [userId]);
 
-  // Fetch tasks assigned to the current user
   const fetchTasks = async () => {
     try {
       setLoadingTasks(true);
@@ -83,7 +298,7 @@ const UserTasks = () => {
       const fetchedTasks = res.data || [];
       setTasks(fetchedTasks);
 
-      // Fetch detailed user info for assignedTo users in tasks to avoid showing just userId
+      // Fetch detailed user info for assignedTo users in tasks
       const assignedUserIds = [
         ...new Set(fetchedTasks.map((t) => t.assignedToId)),
       ].filter(Boolean);
@@ -92,7 +307,6 @@ const UserTasks = () => {
         const usersDetails = await Promise.all(
           assignedUserIds.map((id) => fetchUserById(id))
         );
-        // Map userId to user details
         const map = {};
         usersDetails.forEach((u) => {
           if (u) map[u.userId] = u;
@@ -110,7 +324,6 @@ const UserTasks = () => {
     }
   };
 
-  // Fetch single user details by userId
   const fetchUserById = async (userId) => {
     try {
       const res = await axios.get(
@@ -122,7 +335,6 @@ const UserTasks = () => {
     }
   };
 
-  // Fetch members of a project for reassignment dropdown
   const fetchProjectMembers = async (projectId) => {
     try {
       setLoadingMembers(true);
@@ -161,7 +373,7 @@ const UserTasks = () => {
 
   const handleUpdateTask = async () => {
     if (!selectedTask) return;
-    if (!editTitle.trim()) {
+    if (!editTitle.trim()) {  
       alert("Le titre est requis.");
       return;
     }
@@ -176,7 +388,6 @@ const UserTasks = () => {
         }
       );
       alert("Tâche mise à jour avec succès.");
-      // Refresh tasks and assigned users data
       fetchTasks();
       handleCloseEdit();
     } catch (err) {
@@ -193,6 +404,13 @@ const UserTasks = () => {
     );
   }
 
+  // Compose member object for chart
+  const chartMember = {
+    ...user,
+    firstName: user.firstName || "Utilisateur",
+    lastName: user.lastName || "",
+  };
+
   return (
     <Paper sx={{ padding: 3 }}>
       <Typography variant="h5" gutterBottom>
@@ -206,58 +424,65 @@ const UserTasks = () => {
       ) : tasks.length === 0 ? (
         <Typography>Aucune tâche assignée pour le moment.</Typography>
       ) : (
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Titre</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Statut</TableCell>
-                <TableCell>Projet</TableCell>
-                <TableCell>Assigné à</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tasks.map((task) => {
-                const assignedUser = assignedUsersMap[task.assignedToId];
-                return (
-                  <TableRow key={task.tacheId} hover>
-                    <TableCell>{task.title}</TableCell>
-                    <TableCell>{task.description}</TableCell>
-                    <TableCell>{task.status}</TableCell>
-                    <TableCell>{task.project?.title || "-"}</TableCell>
-                    <TableCell>
-                      {assignedUser ? (
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
-                            {assignedUser.firstName[0]}
-                          </Avatar>
-                          <Typography variant="body2">
-                            {assignedUser.firstName} {assignedUser.lastName} (
-                            {assignedUser.email})
-                          </Typography>
-                        </Stack>
-                      ) : (
-                        task.assignedToId
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title="Modifier la tâche">
-                        <IconButton
-                          onClick={() => handleEditClick(task)}
-                          color="primary"
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Titre</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Statut</TableCell>
+                  <TableCell>Projet</TableCell>
+                  <TableCell>Assigné à</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tasks.map((task) => {
+                  const assignedUser = assignedUsersMap[task.assignedToId];
+                  return (
+                    <TableRow key={task.tacheId} hover>
+                      <TableCell>{task.title}</TableCell>
+                      <TableCell>{task.description}</TableCell>
+                      <TableCell>{task.status}</TableCell>
+                      <TableCell>{task.project?.title || "-"}</TableCell>
+                      <TableCell>
+                        {assignedUser ? (
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
+                              {assignedUser.firstName
+                                ? assignedUser.firstName[0]
+                                : "?"}
+                            </Avatar>
+                            <Typography variant="body2">
+                              {assignedUser.firstName} {assignedUser.lastName} (
+                              {assignedUser.email})
+                            </Typography>
+                          </Stack>
+                        ) : (
+                          task.assignedToId
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Modifier la tâche">
+                          <IconButton
+                            onClick={() => handleEditClick(task)}
+                            color="primary"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Gantt Chart Visualization */}
+          <GanttChart member={chartMember} tasks={tasks} />
+        </>
       )}
 
       {/* Edit Task Dialog */}
@@ -290,7 +515,7 @@ const UserTasks = () => {
             >
               <MenuItem value="En attente">En attente</MenuItem>
               <MenuItem value="En cours">En cours</MenuItem>
-              <MenuItem value="Terminé">Terminé</MenuItem>
+              <MenuItem value="Terminée">Terminée</MenuItem>
             </Select>
           </FormControl>
 

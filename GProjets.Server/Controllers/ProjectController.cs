@@ -30,13 +30,16 @@ namespace GProjets.Server.Controllers
         }
 
 
-        // ✅ Add a new project
         [HttpPost("AddProject")]
         public async Task<IActionResult> AddProject([FromBody] Project project)
         {
             var chef = await _context.Users.FirstOrDefaultAsync(u => u.UserId == project.ChefId && u.Role.ToLower() == "chef");
             if (chef == null)
                 return BadRequest(new { message = "Chef de projet non valide." });
+
+            // Validation dates
+            if (project.DateDebut > project.DateFin)
+                return BadRequest(new { message = "La date de début doit être avant la date de fin." });
 
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
@@ -51,7 +54,6 @@ namespace GProjets.Server.Controllers
             if (project == null)
                 return NotFound(new { message = "Projet non trouvé." });
 
-            // Optionally, check if the new ChefId is valid
             if (updatedProject.ChefId != project.ChefId)
             {
                 var chef = await _context.Users.FirstOrDefaultAsync(u => u.UserId == updatedProject.ChefId && u.Role.ToLower() == "chef");
@@ -61,8 +63,14 @@ namespace GProjets.Server.Controllers
                 project.ChefId = updatedProject.ChefId;
             }
 
+            // Validation dates
+            if (updatedProject.DateDebut > updatedProject.DateFin)
+                return BadRequest(new { message = "La date de début doit être avant la date de fin." });
+
             project.Title = updatedProject.Title;
             project.Description = updatedProject.Description;
+            project.DateDebut = updatedProject.DateDebut;
+            project.DateFin = updatedProject.DateFin;
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Projet mis à jour avec succès.", project });
@@ -111,13 +119,18 @@ namespace GProjets.Server.Controllers
             return Ok(new { message = "Membre retiré du projet." });
         }
 
-        // ✅ Add a task to a project
         [HttpPost("{projectId}/AddTask")]
         public async Task<IActionResult> AddTask(int projectId, [FromBody] Tache tache)
         {
             var userInProject = await _context.UserProjects.AnyAsync(up => up.ProjectId == projectId && up.UserId == tache.AssignedToId);
             if (!userInProject)
                 return BadRequest(new { message = "L'utilisateur n'est pas membre de ce projet." });
+
+            if (tache.DateDebut == default || tache.DateFin == default)
+                return BadRequest(new { message = "La date de début et la date de fin sont requises." });
+
+            if (tache.DateDebut > tache.DateFin)
+                return BadRequest(new { message = "La date de début doit être avant la date de fin." });
 
             tache.ProjectId = projectId;
             _context.Taches.Add(tache);
@@ -126,7 +139,6 @@ namespace GProjets.Server.Controllers
             return Ok(new { message = "Tâche ajoutée avec succès.", tache });
         }
 
-        // ✅ Update a task in a project
         [HttpPut("UpdateTask/{taskId}")]
         public async Task<IActionResult> UpdateTask(int taskId, [FromBody] Tache updatedTache)
         {
@@ -134,15 +146,25 @@ namespace GProjets.Server.Controllers
             if (tache == null)
                 return NotFound(new { message = "Tâche non trouvée." });
 
+            // Optional date validation
+            if (updatedTache.DateDebut.HasValue && updatedTache.DateFin.HasValue)
+            {
+                if (updatedTache.DateDebut > updatedTache.DateFin)
+                    return BadRequest(new { message = "La date de début doit être avant la date de fin." });
+
+                tache.DateDebut = updatedTache.DateDebut.Value;
+                tache.DateFin = updatedTache.DateFin.Value;
+            }
+
             tache.Title = updatedTache.Title;
             tache.Description = updatedTache.Description;
             tache.Status = updatedTache.Status;
 
-            // Optionally reassign to another user if provided
             if (updatedTache.AssignedToId != 0)
             {
                 var isMember = await _context.UserProjects.AnyAsync(up =>
                     up.ProjectId == tache.ProjectId && up.UserId == updatedTache.AssignedToId);
+
                 if (!isMember)
                     return BadRequest(new { message = "Le nouvel utilisateur n'est pas membre de ce projet." });
 
@@ -150,8 +172,9 @@ namespace GProjets.Server.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Tâche mise à jour avec succès." });
+            return Ok(tache);
         }
+
 
         // ✅ Delete a task from a project
         [HttpDelete("DeleteTask/{taskId}")]

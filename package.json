@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@microsoft/signalr": "^8.0.7",
     "goober": "^2.1.16",
     "react-hot-toast": "^2.5.2"
   }

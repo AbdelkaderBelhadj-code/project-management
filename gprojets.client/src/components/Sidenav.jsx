@@ -18,6 +18,7 @@ import {
 } from 'react-ionicons';
 
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 import Logo from '../assets/LogoP.jpg';
 
 const drawerWidth = 240;
@@ -95,8 +96,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
         }),
-        marginLeft: open ? 0 : `-170px`,  // Ajustez cette valeur pour réduire la largeur
-  // Ici, ajustez la largeur ou la marge
+        marginLeft: open ? 0 : `-170px`,
         ...(open && {
             transition: theme.transitions.create('margin', {
                 easing: theme.transitions.easing.easeOut,
@@ -106,7 +106,6 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
         }),
     })
 );
-
 
 const SidebarLink = ({ icon: Icon, title, path, isActive, onClick }) => (
     <ListItem disablePadding sx={{ display: 'block' }}>
@@ -141,6 +140,20 @@ const SidebarLink = ({ icon: Icon, title, path, isActive, onClick }) => (
     </ListItem>
 );
 
+const getUserFromToken = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+        const decoded = jwtDecode(token);
+        return {
+            userId: decoded.UserId || decoded.userId,
+            role: decoded.role || decoded.Role || null,
+        };
+    } catch (error) {
+        return null;
+    }
+};
+
 export default function Sidenav() {
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
@@ -152,12 +165,26 @@ export default function Sidenav() {
         navigate('/', { replace: true });
     };
 
+    const user = getUserFromToken();
+
     const navLinks = [
         { title: 'Dashboard', icon: HomeOutline, path: '/app' },
-        { title: 'Projects', icon: GridOutline, path: '/app/GestionProjets' },
-        { title: 'Teams', icon: PeopleOutline, path: '/app/GestionEquipe' },
-        { title: 'Manage Team', icon: PeopleOutline, path: '/app/TaskMembers' },
-        { title: 'My tasks', icon: NewspaperOutline, path: '/app/UserTasks' },
+        ...(user?.role === 'admin'
+            ? [
+                { title: 'Projects', icon: GridOutline, path: '/app/GestionProjets' },
+                { title: 'Teams', icon: PeopleOutline, path: '/app/GestionEquipe' },
+            ]
+            : []),
+        ...(user?.role === 'chef'
+            ? [
+                { title: 'Manage Team', icon: PeopleOutline, path: '/app/TaskMembers' },
+            ]
+            : []),
+        ...(user?.role === 'membre'
+            ? [
+                { title: 'My tasks', icon: NewspaperOutline, path: '/app/UserTasks' },
+            ]
+            : []),
         { title: 'Calendar', icon: CalendarClearOutline, path: '/app/CalendarPage' },
         { title: 'Notifications', icon: NotificationsOutline, path: '/app/Notifications' },
         { title: 'Settings', icon: SettingsOutline, path: '/app/Settings' },

@@ -58,7 +58,7 @@ function LoginPage() {
                 } else if (role === 'chef de projet' || role === 'chef') {
                     navigate('/app');
                 } else {
-                    navigate('/member');
+                    navigate('/app');
                 }
             } else {
                 setError('Identifiants incorrects.');

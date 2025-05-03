@@ -25,6 +25,13 @@ namespace GProjets.Server.Models.Entites
         public Project? Project { get; set; }
 
         public string Status { get; set; } = "En attente";
-    }
 
+        // 🟢 Add these:
+        [DataType(DataType.Date)]
+        public DateTime? DateDebut { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime? DateFin { get; set; }
+
+    }
 }

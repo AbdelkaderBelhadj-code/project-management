@@ -15,6 +15,7 @@ namespace GProjets.Server.Data
         public DbSet<Project> Projects { get; set; }
         public DbSet<Tache> Taches { get; set; }
         public DbSet<UserProject> UserProjects { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,12 +37,11 @@ namespace GProjets.Server.Data
                 .HasForeignKey(up => up.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configure Tache -> User (AssignedTo)
             modelBuilder.Entity<Tache>()
                 .HasOne(t => t.AssignedTo)
                 .WithMany()
                 .HasForeignKey(t => t.AssignedToId)
-                .OnDelete(DeleteBehavior.Restrict); // Avoid cascade issue
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Configure Tache -> Project
             modelBuilder.Entity<Tache>()

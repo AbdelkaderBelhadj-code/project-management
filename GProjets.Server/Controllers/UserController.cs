@@ -144,7 +144,6 @@ namespace GProjets.Server.Controllers
 
 
 
-        // ✅ Suppression d'un utilisateur
         [HttpDelete("{email}")]
         public async Task<IActionResult> DeleteUser(string email)
         {
@@ -152,10 +151,29 @@ namespace GProjets.Server.Controllers
             if (user == null)
                 return NotFound(new { message = "Utilisateur non trouvé" });
 
+            // 1. Unassign the user from tasks
+            var tasks = await _dbContext.Taches
+                .Where(t => t.AssignedToId == user.UserId)
+                .ToListAsync();
+            foreach (var task in tasks)
+            {
+                task.AssignedToId = null; // Unassign the user
+            }
+
+            // 2. Remove user from all project associations (UserProjects)
+            var userProjects = await _dbContext.UserProjects
+                .Where(up => up.UserId == user.UserId)
+                .ToListAsync();
+            _dbContext.UserProjects.RemoveRange(userProjects);
+
+            // 3. Remove the user
             _dbContext.Users.Remove(user);
             await _dbContext.SaveChangesAsync();
+
             return Ok(new { message = "Utilisateur supprimé avec succès" });
         }
+
+
 
         // ✅ Obtenir les emails des utilisateurs ayant le rôle "Chef"
         [HttpGet("Chefs")]
@@ -212,7 +230,7 @@ namespace GProjets.Server.Controllers
         public async Task<IActionResult> GetAllMembers()
         {
             var members = await _dbContext.Users
-                .Where(u => u.Role.ToLower() == "membre")
+                .Where(u => u.Role.ToLower() == "member")
                 .Select(u => new
                 {
                     u.UserId,

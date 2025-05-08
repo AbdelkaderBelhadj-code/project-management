@@ -12,49 +12,56 @@ import ProtectedRoute from './helpers/ProtectedRoute';
 import UserProjectsTable from './pages/UserProjectsTable';
 import ProjectMembersTasksManager from './pages/ProjectMembersTasksManager';
 import UserTasks from './pages/UserTasks';
+import Chat from './pages/Chat';
+
+const getToken = () => localStorage.getItem('token');
 
 function App() {
     return (
         <Router>
             <Routes>
-            <Route path="/" element={<LoginPage />} />
+                {/* Public Route */}
+                <Route path="/" element={<LoginPage />} />
 
-<Route path="/app" element={<ProtectedRoute allowedRoles={['admin', 'chef', 'membre']} />}>
-    <Route element={<Sidenav />}>
-        <Route index element={<Dashboard />} />
-        
-        {/* Admin only routes */}
-        <Route path="GestionProjets" element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route index element={<GestionProjets />} />
-        </Route>
-        <Route path="GestionEquipe" element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route index element={<GestionEquipe />} />
-        </Route>
-        
-        {/* Chef only route */}
-        <Route path="TaskMembers" element={<ProtectedRoute allowedRoles={['chef']} />}>
-            <Route index element={<ProjectMembersTasksManager />} />
-        </Route>
-        
-        {/* Member only route */}
-        <Route path="UserTasks" element={<ProtectedRoute allowedRoles={['membre']} />}>
-            <Route index element={<UserTasks />} />
-        </Route>
+                {/* Protected main app routes for all authenticated roles */}
+                <Route element={<ProtectedRoute allowedRoles={['admin', 'chef', 'membre', 'member']} />}>
+                    <Route path="/app" element={<Sidenav />}>
+                        <Route index element={<Dashboard />} />
 
-        {/* Routes accessible to all roles */}
-        <Route path="CalendarPage" element={<CalendarPage />} />
-        <Route path="UserProjects" element={<UserProjectsTable />} />
+                        {/* Admin only routes */}
+                        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                            <Route path="GestionProjets" element={<GestionProjets />} />
+                            <Route path="GestionEquipe" element={<GestionEquipe />} />
+                        </Route>
 
-    </Route>
+                        {/* Chef only route */}
+                        <Route element={<ProtectedRoute allowedRoles={['chef']} />}>
+                            <Route path="TaskMembers" element={<ProjectMembersTasksManager />} />
+                            <Route path="chef-dashboard" element={<ChefDashboard />} />
+                        </Route>
+
+                        {/* Member only route */}
+                        <Route element={<ProtectedRoute allowedRoles={['member', 'membre']} />}>
+                            <Route path="UserTasks" element={<UserTasks />} />
+                            <Route path="member-dashboard" element={<MemberDashboard />} />
+                        </Route>
+
+                        {/* Unified group chat for all roles */}
+                        <Route path="chat" element={<Chat jwt={getToken()} />} />
+
+                        {/* Routes accessible to all roles */}
+                        <Route path="CalendarPage" element={<CalendarPage />} />
+                        <Route path="UserProjects" element={<UserProjectsTable />} />
+                    </Route>
                 </Route>
 
-                {/* You can also protect these if needed */}
-                <Route path="/chef" element={<ProtectedRoute allowedRoles={['chef']} />}>
-                    <Route index element={<ChefDashboard />} />
+                {/* Legacy direct dashboard routes (optional) */}
+                <Route element={<ProtectedRoute allowedRoles={['chef']} />}>
+                    <Route path="/chef" element={<ChefDashboard />} />
                 </Route>
-                <Route path="/member" element={<ProtectedRoute allowedRoles={['membre']} />}>
-                    <Route index element={<MemberDashboard />} />
-</Route>
+                <Route element={<ProtectedRoute allowedRoles={['membre', 'member']} />}>
+                    <Route path="/member" element={<MemberDashboard />} />
+                </Route>
             </Routes>
         </Router>
     );

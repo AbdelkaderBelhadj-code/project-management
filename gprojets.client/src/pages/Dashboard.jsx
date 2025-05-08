@@ -50,7 +50,7 @@ export default function Dashboard() {
             }
         };
 
-        if (userId && userRole.toLowerCase() === 'membre') {
+        if (userId && userRole.toLowerCase() === 'member') {
             fetchMemberTasks();
         }
     }, [userId, userRole]);
@@ -65,7 +65,7 @@ export default function Dashboard() {
                 </Typography>
 
                 {/* Membres view */}
-                {userRole.toLowerCase() === 'membre' && (
+                {userRole.toLowerCase() === 'member' && (
     <Box
     sx={{
         backgroundColor: '#f9f9f9',

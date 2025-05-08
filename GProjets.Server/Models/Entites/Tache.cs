@@ -13,8 +13,7 @@ namespace GProjets.Server.Models.Entites
 
         public string Description { get; set; }
 
-        [Required]
-        public int AssignedToId { get; set; }
+        public int? AssignedToId { get; set; }
 
         [ForeignKey("AssignedToId")]
         public User? AssignedTo { get; set; }

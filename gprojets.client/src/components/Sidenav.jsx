@@ -15,6 +15,7 @@ import {
     HomeOutline, GridOutline, PeopleOutline, NewspaperOutline,
     CalendarClearOutline, NotificationsOutline, SettingsOutline,
     LogOutOutline, SearchOutline, ShareSocialOutline,
+    ChatbubbleEllipsesOutline
 } from 'react-ionicons';
 
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -96,7 +97,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
         }),
-        marginLeft: open ? 0 : `-170px`,
+        marginLeft: open ? 0 : -170,
         ...(open && {
             transition: theme.transitions.create('margin', {
                 easing: theme.transitions.easing.easeOut,
@@ -169,26 +170,43 @@ export default function Sidenav() {
 
     const navLinks = [
         { title: 'Dashboard', icon: HomeOutline, path: '/app' },
+
         ...(user?.role === 'admin'
             ? [
                 { title: 'Projects', icon: GridOutline, path: '/app/GestionProjets' },
                 { title: 'Teams', icon: PeopleOutline, path: '/app/GestionEquipe' },
+                { title: 'Messaging', icon: ChatbubbleEllipsesOutline, path: '/app/chat' },
             ]
             : []),
+
         ...(user?.role === 'chef'
             ? [
                 { title: 'Manage Team', icon: PeopleOutline, path: '/app/TaskMembers' },
+                { title: 'Messaging', icon: ChatbubbleEllipsesOutline, path: '/app/chat' },
             ]
             : []),
-        ...(user?.role === 'membre'
+
+        ...(user?.role === 'member'
             ? [
                 { title: 'My tasks', icon: NewspaperOutline, path: '/app/UserTasks' },
+                { title: 'Messaging', icon: ChatbubbleEllipsesOutline, path: '/app/chat' },
             ]
             : []),
+
         { title: 'Calendar', icon: CalendarClearOutline, path: '/app/CalendarPage' },
         { title: 'Notifications', icon: NotificationsOutline, path: '/app/Notifications' },
         { title: 'Settings', icon: SettingsOutline, path: '/app/Settings' },
     ];
+
+    // New: handle Messaging click
+    const handleMessagingClick = (path) => {
+        if (location.pathname !== path) {
+            navigate(path);
+            setTimeout(() => window.location.reload(), 0);
+        } else {
+            window.location.reload();
+        }
+    };
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -236,6 +254,7 @@ export default function Sidenav() {
                 <List>
                     {navLinks.map((link) => {
                         const isActive = location.pathname === link.path;
+                        const isMessaging = link.title === 'Messaging';
                         return (
                             <SidebarLink
                                 key={link.title}
@@ -243,7 +262,11 @@ export default function Sidenav() {
                                 title={link.title}
                                 path={link.path}
                                 isActive={isActive}
-                                onClick={() => navigate(link.path)}
+                                onClick={
+                                    isMessaging
+                                        ? () => handleMessagingClick(link.path)
+                                        : () => navigate(link.path)
+                                }
                             />
                         );
                     })}

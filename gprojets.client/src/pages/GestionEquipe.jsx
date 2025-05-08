@@ -28,7 +28,7 @@ const modalStyle = {
 const roles = [
     { value: 'admin', label: 'Administrateur' },
     { value: 'chef', label: 'Chef de projet' },
-    { value: 'membre', label: 'Membre' },
+    { value: 'member', label: 'Membre' },
 ];
 
 const GestionEquipe = () => {

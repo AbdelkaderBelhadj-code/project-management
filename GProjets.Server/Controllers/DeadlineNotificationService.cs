@@ -11,9 +11,9 @@ namespace GProjets.Server.Controllers
     public class DeadlineNotificationService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IHubContext<MessageHub> _hubContext;
 
-        public DeadlineNotificationService(IServiceProvider serviceProvider, IHubContext<NotificationHub> hubContext)
+        public DeadlineNotificationService(IServiceProvider serviceProvider, IHubContext<MessageHub> hubContext)
         {
             _serviceProvider = serviceProvider;
             _hubContext = hubContext;

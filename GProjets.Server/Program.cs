@@ -51,7 +51,11 @@ namespace GProjets.Server
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"], // Configuré dans appsettings.json
                     ValidAudience = builder.Configuration["Jwt:Audience"], // Configuré dans appsettings.json
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) // Configuré dans appsettings.json
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+                    ),
+                    // *** THIS IS THE CRUCIAL LINE ***
+                    RoleClaimType = "Role" // <-- This tells ASP.NET to look for "Role" in your JWT!
                 };
                 // Permettre au client SignalR de passer le token via query string
                 options.Events = new JwtBearerEvents
@@ -72,7 +76,8 @@ namespace GProjets.Server
 
             builder.Services.AddControllers().AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                options.JsonSerializerOptions.ReferenceHandler =
+                    System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
             });
 
             // Connexion à la base SQL Server
@@ -84,6 +89,7 @@ namespace GProjets.Server
 
             var app = builder.Build();
 
+            // Authentication and Authorization
             app.UseAuthentication();
 
             // Swagger activé seulement en mode développement
@@ -107,7 +113,7 @@ namespace GProjets.Server
             app.MapControllers();
 
             // Mapping du hub SignalR
-            app.MapHub<NotificationHub>("/notifications");
+            app.MapHub<MessageHub>("/notifications");
 
             // Lancement de l'application
             app.Run();

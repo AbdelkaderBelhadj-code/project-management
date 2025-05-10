@@ -65,34 +65,34 @@ const GanttChart = ({ members, tasksByUser }) => {
     >
       {/* Header - dates */}
       <Box
-  sx={{
-    display: "flex",
-    fontSize: 12,
-    fontWeight: 600,
-    color: "#333",
-    ml: `${labelColWidth}px`,
-    position: "sticky",
-    top: 0,
-    zIndex: 10,
-    backgroundColor: "#fbfcfd",
-    borderBottom: "1px solid #ddd",
-  }}
->
-  {days.map((d, idx) => (
-    <Box
-      key={idx}
-      sx={{
-        width: DAY_WIDTH,
-        flexShrink: 0,
-        textAlign: "center",
-        py: "4px",
-        borderRight: idx !== days.length - 1 ? "1px solid #eaeaea" : "none",
-      }}
-    >
-      {d.format("DD/MM")}
-    </Box>
-  ))}
-</Box>
+        sx={{
+          display: "flex",
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#333",
+          ml: `${labelColWidth}px`,
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          backgroundColor: "#fbfcfd",
+          borderBottom: "1px solid #ddd",
+        }}
+      >
+        {days.map((d, idx) => (
+          <Box
+            key={idx}
+            sx={{
+              width: DAY_WIDTH,
+              flexShrink: 0,
+              textAlign: "center",
+              py: "4px",
+              borderRight: idx !== days.length - 1 ? "1px solid #eaeaea" : "none",
+            }}
+          >
+            {d.format("DD/MM")}
+          </Box>
+        ))}
+      </Box>
 
       {/* Rows */}
       <Box>
@@ -513,6 +513,11 @@ const ProjectMembersTasksManager = () => {
   // Helper to show date in French format
   const formatDate = date => date ? dayjs(date).format("DD/MM/YYYY") : "";
 
+  // --- Get the selected project object ---
+  const selectedProject = projects.find(
+    p => String(p.projectId) === String(selectedProjectId)
+  );
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ maxWidth: 1200, margin: "auto", mt: 5 }}>
@@ -540,6 +545,27 @@ const ProjectMembersTasksManager = () => {
             </Select>
           </FormControl>
         </Paper>
+
+        {/* --- Selected project details --- */}
+        {!loading && selectedProject && (
+          <Paper sx={{ p: 2, mb: 3, bgcolor: "#f5f7fa" }}>
+            <Typography variant="h6" color="primary" gutterBottom>
+              Détails du projet:
+            </Typography>
+            <Typography>
+              <strong>Description:</strong>{" "}
+              {selectedProject.description || <em>Aucune description</em>}
+            </Typography>
+            <Typography>
+              <strong>Date début:</strong>{" "}
+              {formatDate(selectedProject.dateDebut)}
+            </Typography>
+            <Typography>
+              <strong>Date fin:</strong>{" "}
+              {formatDate(selectedProject.dateFin)}
+            </Typography>
+          </Paper>
+        )}
 
         {loading && <CircularProgress sx={{ display: "block", mx: "auto" }} />}
 
